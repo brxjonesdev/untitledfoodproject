@@ -12,18 +12,26 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
+    "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
+    "formik": "^2.4.6",
+    "framer-motion": "^11.2.5",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.378.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
+    "socket.io-client": "^4.7.5",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vaul": "^0.9.1",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
