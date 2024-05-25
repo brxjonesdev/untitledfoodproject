@@ -21,3 +21,12 @@ export function useMediaQuery(query: string) {
 
   return matches;
 }
+
+export function getRandomColor() {
+  const colors = [
+    'bright_plum-700',
+    'strawberry_milkshake-700',
+    'citrus_blush-700',
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}

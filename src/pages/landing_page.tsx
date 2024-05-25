@@ -19,7 +19,7 @@ export default function LandingPage() {
                 easy to find the perfect meal for any occasion.
               </p>
               <div className="mt-6 space-x-4">
-                <Link to="/home">
+                <Link to="/gameroom">
                   <Button
                     className="
               bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800
