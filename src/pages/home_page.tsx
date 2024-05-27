@@ -50,7 +50,7 @@ export default function Homepage() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const [isJoinMenuOpen, setIsJoinMenuOpen] = useState(false);
   const [open, setOpen] = useState(false); // tracks if the dialog/drawer is open
-  const [value, setValue] = useState('20140801'); // tracks value of the join room code input
+  const [value, setValue] = useState(''); // tracks value of the join room code input
   const [username, setUsername] = useState(''); // tracks current user's username
   const [roomInfo, setRoomInfo] = useState<{
     owner: string;
@@ -120,6 +120,12 @@ export default function Homepage() {
         setSubmitting(false);
       }
     );
+
+    socket.on('room-locked', (message: string) => {
+      setJoinStatus(message);
+      setSubmitting(false);
+    
+    })
 
     socket.on('room-not-found', (code) => {
       setJoinStatus(`Room with code ${code} not found.`);
@@ -254,6 +260,7 @@ export default function Homepage() {
     if (socket.connected) {
       socket.emit('create-room', roomInfo);
       setUsername(userName);
+      setValue(roomCode);
     } else {
       setStatus(
         `Socket is not connected, server is down. Please try again later.`

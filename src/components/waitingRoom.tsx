@@ -15,6 +15,9 @@ import {
 } from '@/components/ui/accordion';
 import { useEffect, useState } from 'react';
 import { RoomUsers, Guest } from '@/pages/home_page';
+import { Toggle } from "@/components/ui/toggle"
+import lock from "@/assets/lock.svg"
+
 
 type WaitingRoomProps = {
   roomInfo: {
@@ -36,6 +39,7 @@ const WaitingRoom = ({
   socket,
 }: WaitingRoomProps) => {
   const isHost = roomInfo.owner === username;
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     socket.on(
@@ -67,12 +71,30 @@ const WaitingRoom = ({
         });
       }
     );
+    socket.on('room-locked-toggled', (isLocked : boolean) => {
+      setIsLocked(isLocked);
+    });
   });
+  console.log(roomInfo)
 
   return (
     <Card className="rounded-none rounded-b-xl w-full">
       <CardHeader className="pb-0">
-        <CardTitle>{roomInfo.name}</CardTitle>
+        <CardTitle>
+          <div className='flex gap-8 items-center'>
+          {roomInfo.name}
+          {isHost && (
+            <Toggle
+            pressed={isLocked}
+             onClick={() => {
+              socket.emit('toggle-room-lock', roomInfo.code);
+             }}
+            >
+              <img src={lock} alt="lock" />
+            </Toggle>
+          )}
+          </div>
+          </CardTitle>
         <CardDescription>
           {isHost ? (
             <div>
