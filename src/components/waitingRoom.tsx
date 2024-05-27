@@ -40,6 +40,7 @@ const WaitingRoom = ({
 }: WaitingRoomProps) => {
   const isHost = roomInfo.owner === username;
   const [isLocked, setIsLocked] = useState(false);
+  const [showStartGame, setShowStartGame] = useState(true);
 
   useEffect(() => {
     socket.on(
@@ -74,6 +75,12 @@ const WaitingRoom = ({
     socket.on('room-locked-toggled', (isLocked : boolean) => {
       setIsLocked(isLocked);
     });
+  
+    return () => {
+      socket.off('user-joined');
+      socket.off('user-left');
+      socket.off('room-locked-toggled');
+    };
   });
   console.log(roomInfo)
 
@@ -160,11 +167,12 @@ const WaitingRoom = ({
         and should be disabled if there isnt 
         another player in the room that is not the host.
          */}
-        {isHost && roomUsers && roomUsers.users.length > 1 && (
+        {isHost && roomUsers && roomUsers.users.length > 1 && showStartGame && (
           <button
             className="w-full bg-bright_plum-600 text-white-950 py-2 font-semibold rounded-lg hover:bg-bright_plum-700 transition-colors duration-300"
             onClick={() => {
               socket.emit('start-game', roomInfo.code);
+              setShowStartGame(false);
             }}
           >
             Start Game

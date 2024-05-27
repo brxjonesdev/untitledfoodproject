@@ -34,104 +34,15 @@ import GameRules from '@/components/rules';
 import { getRandomColor } from '@/lib/utils';
 import WaitingRoom from '@/components/waitingRoom';
 import Gameplay from '@/components/gameplay';
+import useRoomStore from '@/stores/useInitRoomStore';
 
 const socket = io('http://localhost:3001');
 
-export type Guest = {
-  username: string;
-  id: string;
-};
-export type RoomUsers = {
-  owner: string;
-  users: Guest[];
-};
 
 export default function Homepage() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
-  const [isJoinMenuOpen, setIsJoinMenuOpen] = useState(false);
-  const [open, setOpen] = useState(false); // tracks if the dialog/drawer is open
-  const [value, setValue] = useState(''); // tracks value of the join room code input
-  const [username, setUsername] = useState(''); // tracks current user's username
-  const [roomInfo, setRoomInfo] = useState<{
-    owner: string;
-    name: string;
-    code: string;
-  } | null>(null); // tracks the current room's info
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState(''); // tracks the status of the room creation
-  const [joinUsername, setJoinUsername] = useState('Wendy'); // tracks the username of the users joining the room
-  const [joinStatus, setJoinStatus] = useState('');
-  const [roomUsers, setRoomUsers] = useState<RoomUsers | null>(null);
+  const { roomInfo,  } = useRoomStore()
 
-  useEffect(() => {
-    socket.on(
-      'room-created',
-      (roomInfo: {
-        details: {
-          name: string;
-          owner: string;
-          code: string;
-        };
-        usersInRoom: {
-          owner: string;
-          users: Guest[];
-        };
-      }) => {
-        setRoomInfo({
-          owner: roomInfo.details.owner,
-          name: roomInfo.details.name,
-          code: value,
-        });
-        setRoomUsers({
-          owner: roomInfo.details.owner,
-          users: roomInfo.usersInRoom.users,
-        });
-        setSubmitting(false);
-      }
-    );
-    socket.on('room-exists', (code) => {
-      setStatus(`Room with code ${code} already exists.`);
-      setSubmitting(false);
-    });
-
-    socket.on(
-      'room-joined',
-      (roomInfo: {
-        details: {
-          name: string;
-          owner: string;
-          code: string;
-        };
-        usersInRoom: {
-          owner: string;
-          users: Guest[];
-        };
-      }) => {
-        setRoomInfo({
-          owner: roomInfo.details.owner,
-          name: roomInfo.details.name,
-          code: roomInfo.details.code,
-        });
-        setRoomUsers({
-          owner: roomInfo.details.owner,
-          users: roomInfo.usersInRoom.users,
-        });
-        setJoinStatus('');
-        setSubmitting(false);
-      }
-    );
-
-    socket.on('room-locked', (message: string) => {
-      setJoinStatus(message);
-      setSubmitting(false);
-    
-    })
-
-    socket.on('room-not-found', (code) => {
-      setJoinStatus(`Room with code ${code} not found.`);
-      setSubmitting(false);
-    });
-  });
 
   const createRoomForm = () => {
     return (
@@ -466,7 +377,7 @@ export default function Homepage() {
           </div>
         )}
       </section>
-      <section className='flex-grow flex items-center justify-center'>{roomInfo ? <Gameplay /> : <GameRules />}</section>
+      <section className='flex-grow flex items-center justify-center'>{roomInfo ? <Gameplay socket={socket} roomUsers={roomUsers} /> : <GameRules />}</section>
     </main>
   );
 }
