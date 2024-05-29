@@ -1,31 +1,35 @@
-import { RoomUsers } from '@/pages/home_page';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import PhaseOne from './gameplay-phases/phaseOne';
+import useRoomStore from '@/stores/useInitRoomStore';
+import useGameplayStore from '@/stores/useGameplayStore';
 
-export default function Gameplay({socket, roomUsers}: {socket: any, roomUsers: RoomUsers | null}) {
-  const [hasGameStarted, setIsGameStarted] = useState(false)
-  const [phase, setPhase] = useState('')
-  useEffect(()=> {
-    socket.on('game-started', (message: string)=> {
-      console.log(message)
-      setIsGameStarted(true)
-      setPhase(message)
+export default function Gameplay({ socket }: { socket: any }) {
+  const {
+    setHasGameStarted,
+    initInfo: { hasGameStarted },
+  } = useRoomStore();
+
+  const { phase, setPhase } = useGameplayStore();
+
+  useEffect(() => {
+    socket.on('game-started', (message: string) => {
+      console.log(message);
+      setHasGameStarted(true);
+      setPhase(message);
       // Open the order randomizer modal
-    })
-  })
+    });
+  });
 
   const renderComponent = () => {
     switch (phase) {
       case 'waitingOnHost':
         return;
       case 'Phase_One':
-        return <PhaseOne
-        roomUsers={roomUsers}/> ;
+        return;
       case 'Phase_Two':
-        return ;
+        return;
       case 'Phase_Three':
-        return ;
+        return;
       default:
         return null;
     }

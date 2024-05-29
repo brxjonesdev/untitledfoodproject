@@ -13,107 +13,69 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { useEffect, useState } from 'react';
-import { RoomUsers, Guest } from '@/pages/home_page';
-import { Toggle } from "@/components/ui/toggle"
-import lock from "@/assets/lock.svg"
+import { Toggle } from '@/components/ui/toggle';
+import lock from '@/assets/lock.svg';
+import useRoomStore from '@/stores/useInitRoomStore';
+import useGameplayStore from '@/stores/useGameplayStore';
+import { useEffect } from 'react';
 
+const WaitingRoom = ({ socket}) => {
+  const { roomInfo, initInfo, setUsers, setRoomInfo, } = useRoomStore();
+  const { isRoomLocked } = useGameplayStore();
+  const isHost = roomInfo.roomOwner === initInfo.enteredUserName;
 
-type WaitingRoomProps = {
-  roomInfo: {
-    owner: string;
-    name: string;
-    code: string;
-  };
-  setRoomUsers: React.Dispatch<React.SetStateAction<RoomUsers | null>>;
-  roomUsers: RoomUsers | null;
-  username: string;
-  socket: any;
-};
+  useEffect(()=>{
 
-const WaitingRoom = ({
-  roomInfo,
-  roomUsers,
-  setRoomUsers,
-  username,
-  socket,
-}: WaitingRoomProps) => {
-  const isHost = roomInfo.owner === username;
-  const [isLocked, setIsLocked] = useState(false);
-  const [showStartGame, setShowStartGame] = useState(true);
-
-  useEffect(() => {
-    socket.on(
-      'user-joined',
-      (data: {
-        usersInRoom: {
-          owner: string;
-          users: Guest[];
-        };
-      }) => {
-        setRoomUsers({
-          owner: data.usersInRoom.owner,
-          users: data.usersInRoom.users,
-        });
-      }
-    );
-    socket.on(
-      'user-left',
-      (data: {
-        username: string;
-        usersInRoom: {
-          owner: string;
-          users: Guest[];
-        };
-      }) => {
-        setRoomUsers({
-          owner: data.usersInRoom.owner,
-          users: data.usersInRoom.users,
-        });
-      }
-    );
-    socket.on('room-locked-toggled', (isLocked : boolean) => {
-      setIsLocked(isLocked);
-    });
-  
-    return () => {
-      socket.off('user-joined');
-      socket.off('user-left');
-      socket.off('room-locked-toggled');
-    };
-  });
-  console.log(roomInfo)
+    socket.on("user-joined", (data) => {
+      console.log('room-joined', data);
+      setRoomInfo({
+        roomOwner: data.roomDetails.roomOwner,
+        roomName: data.roomDetails.roomName,
+        roomCode: initInfo.enteredRoomCode,
+        restaurantOption: data.roomDetails.restaurantOption,
+        users: data.usersInRoom.users
+      })
+    
+    })
+    socket.on("user-left", (data) => {
+      console.log('room-left', data);
+      setUsers(data.usersInRoom.users)
+    })
+  }, [socket, setRoomInfo, setUsers, initInfo.enteredRoomCode])
 
   return (
     <Card className="rounded-none rounded-b-xl w-full">
       <CardHeader className="pb-0">
         <CardTitle>
-          <div className='flex gap-8 items-center'>
-          {roomInfo.name}
-          {isHost && (
-            <Toggle
-            pressed={isLocked}
-             onClick={() => {
-              socket.emit('toggle-room-lock', roomInfo.code);
-             }}
-            >
-              <img src={lock} alt="lock" />
-            </Toggle>
-          )}
+          <div className="flex gap-8 items-center">
+            {roomInfo.roomName}
+            {isHost && (
+              <Toggle
+                pressed={isRoomLocked}
+                onClick={() => {
+                  socket.emit('toggle-room-lock', roomInfo.roomCode);
+                }}
+              >
+                <img src={lock} alt="lock" />
+              </Toggle>
+            )}
           </div>
-          </CardTitle>
+        </CardTitle>
         <CardDescription>
           {isHost ? (
             <div>
               <p>
-                Room Code: <span className="font-bold">{roomInfo.code}</span>
+                Room Code:{' '}
+                <span className="font-bold">{roomInfo.roomCode}</span>
               </p>
               <span className="font-bold">You are the host</span>
             </div>
           ) : (
             <div className="flex flex-col">
-              <span className="font-bold">{`${roomInfo.owner} is the host`}</span>
-              <span className="font-bold">You are {username}</span>
+              <span className="font-bold">{`${roomInfo.roomOwner} is the host`}</span>
+              <span className="font-bold">
+                You are {initInfo.enteredUserName}
+              </span>
             </div>
           )}
         </CardDescription>
@@ -125,12 +87,12 @@ const WaitingRoom = ({
           transition={{ duration: 0.5 }}
           className="flex flex-col space-y-4"
         >
-          {roomUsers && roomUsers.users.length > 0 && (
+          {roomInfo.users && roomInfo.users.length > 0 && (
             <Accordion type="single" collapsible>
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                   <h1 className="text-xl font-bold tracking-tighter sm:text-5xl">
-                    Users Joined ({roomUsers.users.length})
+                    Users Joined ({roomInfo.users.length})
                   </h1>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -143,15 +105,15 @@ const WaitingRoom = ({
                     >
                       {roomUsers.owner}
                     </motion.p> */}
-                    {roomUsers.users.map((user, index) => (
+                    {roomInfo.users.map((user) => (
                       <motion.div
-                        key={index}
+                        key={user.socketId}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                         className={`flex items-center justify-center min-w-fit bg-bright_plum-600 text-white-950 py-1 font-semibold rounded-lg px-2 text-sm`}
                       >
-                        {user.username}
+                        {user.userName}
                       </motion.div>
                     ))}
                   </motion.div>
@@ -167,17 +129,19 @@ const WaitingRoom = ({
         and should be disabled if there isnt 
         another player in the room that is not the host.
          */}
-        {isHost && roomUsers && roomUsers.users.length > 1 && showStartGame && (
-          <button
-            className="w-full bg-bright_plum-600 text-white-950 py-2 font-semibold rounded-lg hover:bg-bright_plum-700 transition-colors duration-300"
-            onClick={() => {
-              socket.emit('start-game', roomInfo.code);
-              setShowStartGame(false);
-            }}
-          >
-            Start Game
-          </button>
-        )}
+        {isHost &&
+          roomInfo.users &&
+          roomInfo.users.length > 1 &&
+          !initInfo.hasGameStarted && (
+            <button
+              className="w-full bg-bright_plum-600 text-white-950 py-2 font-semibold rounded-lg hover:bg-bright_plum-700 transition-colors duration-300"
+              onClick={() => {
+                socket.emit('start-game', roomInfo.roomCode);
+              }}
+            >
+              Start Game
+            </button>
+          )}
       </CardFooter>
     </Card>
   );

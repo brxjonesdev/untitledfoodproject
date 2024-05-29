@@ -27,7 +27,6 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { useState, useEffect } from 'react';
 import { useMediaQuery } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import GameRules from '@/components/rules';
@@ -35,15 +34,72 @@ import { getRandomColor } from '@/lib/utils';
 import WaitingRoom from '@/components/waitingRoom';
 import Gameplay from '@/components/gameplay';
 import useRoomStore from '@/stores/useInitRoomStore';
+import { useEffect } from 'react';
 
 const socket = io('http://localhost:3001');
 
-
 export default function Homepage() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
-  const { roomInfo,  } = useRoomStore()
+  const {
+    roomInfo,
+    initInfo,
+    setRoomInfo,
+    toggleCreateModal,
+    toggleJoinModal,
+    setEnteredUserName,
+    setEnteredRoomCode,
+    setIsSendingToServer,
+    setJoinStatus,
+    setCreateStatus,
+    setIsInWaitingRoom,
+    setUsers,
+  } = useRoomStore();
 
+  useEffect(()=>{
+    socket.on("room-created", (data) => {
+      console.log('Room created:', data);
+      setRoomInfo({
+        roomOwner: data.infoFromValues.roomOwner,
+        roomName: data.infoFromValues.roomName,
+        roomCode: data.infoFromValues.roomCode,
+        restaurantOption: data.infoFromValues.restaurantOption,
+        users: data.infoFromValues.users,
+      });
+      setIsInWaitingRoom(true);
+    })
 
+    socket.on("room-exists", (data) => {
+      setCreateStatus(`Room with code ${data} already exists. Please try again with a different code`)
+      setIsSendingToServer(false);
+    })
+
+    socket.on("room-not-found", (data) => {
+      setJoinStatus(`Room with code ${data} not found. Please try again with a different code`)
+      setIsSendingToServer(false);
+    })
+
+    socket.on("room-locked", (data) => {
+      setJoinStatus(`Room with code ${data} is locked. Please try again with a different code`)
+      setIsSendingToServer(false);
+    })
+
+    return () => {
+      socket.off("room-created");
+      socket.off("room-exists");
+      socket.off("room-joined");
+      socket.off("room-not-found");
+      socket.off("room-locked");
+    }
+
+  }, [
+    setCreateStatus,
+    setIsInWaitingRoom,
+    setJoinStatus,
+    setRoomInfo,
+    setUsers,
+    roomInfo,
+    setIsSendingToServer
+  ])
   const createRoomForm = () => {
     return (
       <div className="mx-4">
@@ -52,6 +108,7 @@ export default function Homepage() {
             userName: 'Irene',
             roomName: "ReVeluv's Room",
             roomCode: '20140801',
+            foodOption: 'Breakfast',
           }}
           validationSchema={Yup.object({
             userName: Yup.string().required('Please enter a username'),
@@ -65,124 +122,160 @@ export default function Homepage() {
                 message:
                   'Room code must be exactly 8 digits long, no letters allowed',
               }),
-            // .test('is-unique', 'Room code already taken', async (value) => {
-            //   const response = await fetch(`http://localhost:3001/rooms/${value}`);
-            //   const data = await response.json();
-            //   return data.length === 0;
-            // })
+            foodOption: Yup.string().required('Please select a food option'),
           })}
           onSubmit={(values) => createRoom(values)}
         >
-          <Form className="space-y-4">
-            <div className="flex flex-col space-y-2">
-              <Label
-                htmlFor="userName"
-                className="font-semibold text-sm text-bright_plum-700 underline underline-offset-4"
+          {({ isSubmitting }) => (
+            <Form className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <label
+                  htmlFor="userName"
+                  className="font-semibold text-sm text-bright_plum-700 underline underline-offset-4"
+                >
+                  Enter a name for yourself
+                </label>
+                <Field
+                  id="userName"
+                  placeholder="Bae Joo-hyun"
+                  type="text"
+                  name="userName"
+                  className="p-2 border rounded-md bg-white-950 py-2 text-sm"
+                />
+                <ErrorMessage
+                  name="userName"
+                  component="div"
+                  className="text-bright_plum-400 text-sm"
+                />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <label
+                  htmlFor="roomName"
+                  className="font-semibold text-sm text-strawberry_milkshake-700 underline underline-offset-4"
+                >
+                  Room Name
+                </label>
+                <Field
+                  id="roomName"
+                  placeholder="eg. ReVeluv's Room"
+                  type="text"
+                  name="roomName"
+                  className="p-2 border rounded-md bg-white-950 py-2 text-sm"
+                />
+                <ErrorMessage
+                  name="roomName"
+                  component="div"
+                  className="text-strawberry_milkshake-400 text-sm"
+                />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <label
+                  htmlFor="roomCode"
+                  className="font-semibold text-sm text-citrus_blush-700 underline underline-offset-4"
+                >
+                  Room Code
+                </label>
+                <Field
+                  id="roomCode"
+                  placeholder="eg. 20140801 "
+                  type="text"
+                  name="roomCode"
+                  className="p-2 border rounded-md bg-white-950 py-2 text-sm"
+                />
+                <ErrorMessage
+                  name="roomCode"
+                  component="div"
+                  className="text-citrus_blush-400 text-sm"
+                />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <label
+                  htmlFor="foodOption"
+                  className="font-semibold text-sm text-black-700 underline underline-offset-4"
+                >
+                  Food Option
+                </label>
+                <Field
+                  as="select"
+                  id="foodOption"
+                  name="foodOption"
+                  className="p-2 border rounded-md bg-white-950 py-2 text-sm"
+                >
+                  <option value="Breakfast">Breakfast</option>
+                  <option value="Lunch">Lunch</option>
+                  <option value="Dinner">Dinner</option>
+                  <option value="Sweet Treat Mode">Sweet Treat Mode</option>
+                </Field>
+                <ErrorMessage
+                  name="foodOption"
+                  component="div"
+                  className="text-strawberry_milkshake-400 text-sm"
+                />
+              </div>
+              <button
+                className="w-full bg-black-300 hover:bg-black-400 shadow-md py-2 rounded-md text-white-950 text-md font-semibold"
+                type="submit"
+                disabled={isSubmitting}
               >
-                Enter a name for yourself
-              </Label>
-              <Field
-                id="userName"
-                placeholder="Bae Joo-hyun"
-                type="text"
-                name="userName"
-                className="p-2 border rounded-md bg-white-950 py-2 text-sm"
-              />
-              <ErrorMessage
-                name="userName"
-                component="div"
-                className="text-bright_plum-400 text-sm "
-              />
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Label
-                htmlFor="roomName"
-                className="font-semibold text-sm text-strawberry_milkshake-700 underline underline-offset-4"
-              >
-                Room Name
-              </Label>
-              <Field
-                id="roomName"
-                placeholder="eg. ReVeluv's Room"
-                type="text"
-                name="roomName"
-                className="p-2 border rounded-md bg-white-950 py-2 text-sm"
-              />
-              <ErrorMessage
-                name="roomName"
-                component="div"
-                className="text-strawberry_milkshake-400 text-sm "
-              />
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Label
-                htmlFor="roomCode"
-                className="font-semibold text-sm text-citrus_blush-700 underline underline-offset-4"
-              >
-                Room Code
-              </Label>
-              <Field
-                id="roomCode"
-                placeholder="eg. 20140801 "
-                type="text"
-                name="roomCode"
-                className="p-2 border rounded-md bg-white-950 py-2 text-sm"
-              />
-              <ErrorMessage
-                name="roomCode"
-                component="div"
-                className="text-citrus_blush-400 text-sm "
-              />
-            </div>
-            <Button
-              className="w-full bg-black-300 hover:bg-black-400 shadow-md "
-              type="submit"
-            >
-              {isSubmitting ? 'Creating Room...' : 'Create Room'}
-            </Button>
-          </Form>
+                {isSubmitting ? 'Creating Room...' : 'Create Room'}
+              </button>
+            </Form>
+          )}
         </Formik>
       </div>
     );
   };
 
-  const createRoom = (values: {
+  const createRoom = async (values: {
     userName: string;
     roomName: string;
     roomCode: string;
+    foodOption: string;
   }) => {
-    {
-      /*
-          Logic to create a room goes here:
-          - format values to be sent to the server to make a new room
-          - send values to the server
-          - server will create a new room and send back a response
-          - if successful, user will join the room and the roomInfo will be saved in the state
-          - if not, show an error message
-       */
-    }
-    setSubmitting(true);
-    const { userName, roomName, roomCode } = values;
-    const roomInfo = {
-      owner: userName,
-      name: roomName,
-      code: roomCode,
+    setIsSendingToServer(true);
+    setCreateStatus('Creating room...');
+    const { userName, roomName, roomCode, foodOption } = values;
+
+    const infoFromValues = {
+      roomOwner: userName,
+      roomName,
+      roomCode,
+      restaurantOption: foodOption,
+      users: [
+        {
+          userName: userName,
+          socketId: socket.id,
+          isOwner: true,
+        }
+      ],
     };
+
+    setEnteredUserName(userName);
+    setEnteredRoomCode(roomCode);
+
     if (socket.connected) {
-      socket.emit('create-room', roomInfo);
-      setUsername(userName);
-      setValue(roomCode);
+      socket.emit('create-room', { infoFromValues });
     } else {
-      setStatus(
-        `Socket is not connected, server is down. Please try again later.`
+      setCreateStatus(
+        'Server is down. Please try again later'
       );
-      setSubmitting(false);
+
     }
+    setIsSendingToServer(false);
   };
+
   const joinRoom = (roomCode: string) => {
     if (socket.connected) {
-      socket.emit('join-room', { username: joinUsername, code: roomCode });
-      setUsername(joinUsername);
+      setIsSendingToServer(true);
+      setJoinStatus('Joining room...');
+      setEnteredUserName(initInfo.enteredUserName);
+      setEnteredRoomCode(roomCode);
+      socket.emit('join-room', {
+        username: initInfo.enteredUserName,
+        code: roomCode,
+      });
+      setIsInWaitingRoom(true);
+    
     }
   };
 
@@ -193,14 +286,8 @@ export default function Homepage() {
     from-citrus_blush-800
     to-bright_plum-800 w-full rounded-b-xl flex items-center justify-center "
       >
-        {roomInfo ? (
-          <WaitingRoom
-            roomInfo={roomInfo}
-            username={username}
-            socket={socket}
-            roomUsers={roomUsers}
-            setRoomUsers={setRoomUsers}
-          />
+        {initInfo.isInWaitingRoom ? (
+          <WaitingRoom socket={socket} />
         ) : (
           <div className="px-4 py-12 xl:px-12 max-w-3xl w-full ">
             <div className="space-y-3">
@@ -213,7 +300,10 @@ export default function Homepage() {
               </p>
               <div className="flex flex-col gap-2">
                 {isDesktop ? (
-                  <Dialog open={open} onOpenChange={setOpen}>
+                  <Dialog
+                    open={initInfo.isCreateModalOpen}
+                    onOpenChange={toggleCreateModal}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
@@ -228,27 +318,28 @@ export default function Homepage() {
                         <DialogDescription>
                           Create a new room for your friends to join!
                         </DialogDescription>
-                        {status && (
-                          <div
-                            className="bg-gradient-to-t 
-    from-citrus_blush-800
-    to-bright_plum-800 p-2 rounded-md"
-                          >
-                            <p className="text-sm text-black-300 font-semibold">
-                              {status}
-                            </p>
-                          </div>
-                        )}
+                        {initInfo.createStatus && (
+                        <div className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 p-2 rounded-md mx-auto">
+                          <p className="text-sm text-black-300 font-semibold text-center">
+                            {initInfo.createStatus}
+                          </p>
+                        </div>
+                      )}
                         {createRoomForm()}
                       </DialogHeader>
                     </DialogContent>
                   </Dialog>
                 ) : (
-                  <Drawer open={open} onOpenChange={setOpen}>
-                    <DrawerTrigger asChild>
+                  <Drawer
+                    open={initInfo.isCreateModalOpen}
+                  >
+                    <DrawerTrigger asChild onClick={()=> {
+                      toggleCreateModal()
+                    }}>
                       <Button
                         variant="outline"
-                        className={`bg-black-400 border-0 text-white-950 font-semibold text-md `}
+                        className={`bg-black-400 border-0 text-white-950 font-semibold text-md`}
+                        
                       >
                         Create a Room
                       </Button>
@@ -260,25 +351,21 @@ export default function Homepage() {
                           Create a new room for your friends to join!
                         </DrawerDescription>
                       </DrawerHeader>
-                      {status && (
-                        <div
-                          className="bg-gradient-to-t 
-    from-citrus_blush-800
-    to-bright_plum-800 p-2 rounded-md"
-                        >
-                          <p className="text-sm text-black-300 font-semibold">
-                            {status}
+                      {initInfo.createStatus && (
+                        <div className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 p-2 rounded-md mx-auto">
+                          <p className="text-sm text-black-300 font-semibold text-center">
+                            {initInfo.createStatus}
                           </p>
                         </div>
                       )}
-
                       {createRoomForm()}
-
                       <DrawerFooter className="pt-2">
-                        <DrawerClose asChild>
+                        <DrawerClose asChild onClick={()=>{
+                          toggleCreateModal()
+                        }}>
                           <Button
                             variant="outline"
-                            className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 text-black-500 font-semibold"
+                            className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 text-black-500 font-semibold py-3"
                           >
                             Cancel
                           </Button>
@@ -290,14 +377,14 @@ export default function Homepage() {
 
                 <p
                   className="underline min-w-fit cursor-pointer"
-                  onClick={() => setIsJoinMenuOpen(true)}
+                  onClick={() => toggleJoinModal()}
                 >
                   or join an existing room
                 </p>
               </div>
 
               <div>
-                {isJoinMenuOpen && (
+                {initInfo.isJoinModalOpen && (
                   <div className="flex flex-col items-center gap-4">
                     <div className="bg-white-950 p-5 rounded-lg w-full flex justify-center flex-col items-center space-y-4">
                       <div className="w-full space-y-2">
@@ -307,8 +394,8 @@ export default function Homepage() {
                           placeholder="eg. Wendy"
                           className="p-2 border rounded-md bg-white-450 py-2 text-sm w-full"
                           type="text"
-                          value={joinUsername}
-                          onChange={(e) => setJoinUsername(e.target.value)}
+                          value={initInfo.enteredUserName}
+                          onChange={(e) => setEnteredUserName(e.target.value)}
                         />
                       </div>
                       <h3 className="text-center">
@@ -318,8 +405,8 @@ export default function Homepage() {
                       <InputOTP
                         maxLength={8}
                         className="border-red-100 "
-                        value={value}
-                        onChange={(value) => setValue(value)}
+                        value={initInfo.enteredRoomCode}
+                        onChange={(value) => setEnteredRoomCode(value)}
                       >
                         <InputOTPGroup>
                           <InputOTPSlot
@@ -360,13 +447,14 @@ export default function Homepage() {
                         </InputOTPGroup>
                       </InputOTP>
                       <div className="text-citrus_blush-400 text-sm">
-                        {joinStatus}
+                        {initInfo.joinStatus}
                       </div>
                     </div>
                     <Button
                       className="w-full bg-black-300 hover:bg-black-400 shadow-md "
                       type="submit"
-                      onClick={() => joinRoom(value)}
+                      disabled={initInfo.isSendingToServer}
+                      onClick={() => joinRoom(initInfo.enteredRoomCode)}
                     >
                       Join Room
                     </Button>
@@ -377,7 +465,13 @@ export default function Homepage() {
           </div>
         )}
       </section>
-      <section className='flex-grow flex items-center justify-center'>{roomInfo ? <Gameplay socket={socket} roomUsers={roomUsers} /> : <GameRules />}</section>
+      <section className="flex-grow flex items-center justify-center">
+        {initInfo.isInWaitingRoom ? (
+          <Gameplay socket={socket} />
+        ) : (
+          <GameRules />
+        )}
+      </section>
     </main>
   );
 }
