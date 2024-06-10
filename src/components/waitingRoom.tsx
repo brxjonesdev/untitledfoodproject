@@ -18,30 +18,45 @@ import lock from '@/assets/lock.svg';
 import useRoomStore from '@/stores/useInitRoomStore';
 import useGameplayStore from '@/stores/useGameplayStore';
 import { useEffect } from 'react';
+import { Button } from './ui/button';
 
-const WaitingRoom = ({ socket}) => {
-  const { roomInfo, initInfo, setUsers, setRoomInfo, } = useRoomStore();
-  const { isRoomLocked } = useGameplayStore();
+const WaitingRoom = ({ socket }) => {
+  const { roomInfo, initInfo, setUsers, setRoomInfo } = useRoomStore();
+  const { isRoomLocked, setIsRoomLocked, hasGameStarted } = useGameplayStore();
   const isHost = roomInfo.roomOwner === initInfo.enteredUserName;
 
-  useEffect(()=>{
-
-    socket.on("user-joined", (data) => {
+  useEffect(() => {
+    socket.on('user-joined', (data) => {
       console.log('room-joined', data);
       setRoomInfo({
         roomOwner: data.roomDetails.roomOwner,
         roomName: data.roomDetails.roomName,
         roomCode: initInfo.enteredRoomCode,
         restaurantOption: data.roomDetails.restaurantOption,
-        users: data.usersInRoom.users
-      })
-    
-    })
-    socket.on("user-left", (data) => {
+        users: data.usersInRoom.users,
+      });
+    });
+    socket.on('user-left', (data) => {
       console.log('room-left', data);
-      setUsers(data.usersInRoom.users)
-    })
-  }, [socket, setRoomInfo, setUsers, initInfo.enteredRoomCode])
+      setUsers(data.usersInRoom.users);
+    });
+
+    socket.on('room-locked-toggled', (data: boolean) => {
+      setIsRoomLocked(data);
+    });
+
+    return () => {
+      socket.off('user-joined');
+      socket.off('user-left');
+      socket.off('room-locked-toggled');
+    };
+  }, [
+    socket,
+    setRoomInfo,
+    setUsers,
+    initInfo.enteredRoomCode,
+    setIsRoomLocked,
+  ]);
 
   return (
     <Card className="rounded-none rounded-b-xl w-full">
@@ -97,14 +112,6 @@ const WaitingRoom = ({ socket}) => {
                 </AccordionTrigger>
                 <AccordionContent>
                   <motion.div className="grid grid-cols-5 gap-3">
-                    {/* <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className={`flex items-center justify-center min-w-fit bg-strawberry_milkshake-600 text-white-950 py-1 font-semibold rounded-lg px-2 text-sm`}
-                    >
-                      {roomUsers.owner}
-                    </motion.p> */}
                     {roomInfo.users.map((user) => (
                       <motion.div
                         key={user.socketId}
@@ -122,6 +129,16 @@ const WaitingRoom = ({ socket}) => {
             </Accordion>
           )}
         </motion.div>
+        <div>
+          {/* <Button
+            className="w-full bg-bright_plum-600 text-white-950 py-2 font-semibold rounded-lg hover:bg-bright_plum-700 transition-colors duration-300 mt-5"
+            onClick={() => {
+              socket.emit('simulate-users', roomInfo.roomCode);
+            }}
+          >
+            Simulate Users
+          </Button> */}
+        </div>
       </CardContent>
       <CardFooter>
         {/* 

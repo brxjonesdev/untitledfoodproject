@@ -1,17 +1,17 @@
 import { create } from 'zustand';
 
 export interface RoomInfo {
-    roomOwner: string;
-    roomName: string;
-    roomCode: string;
-    restaurantOption: string;
-    users: {
-      userName: string;
-      isOwner: boolean;
-      socketId: string | undefined;
-    }[];
-  }
-  
+  roomOwner: string;
+  roomName: string;
+  roomCode: string;
+  restaurantOption: string;
+  users: {
+    order?: number;
+    userName: string;
+    isOwner: boolean;
+    socketId: string | undefined;
+  }[];
+}
 
 export interface InitInfo {
   isCreateModalOpen: boolean;
@@ -58,7 +58,7 @@ const useRoomStore = create<RoomStore & RoomStoreActions>((set) => ({
     isCreateModalOpen: false,
     isJoinModalOpen: false,
     enteredUserName: '',
-    enteredRoomCode: '',
+    enteredRoomCode: '20140801',
     isSendingToServer: false,
     joinStatus: '',
     createStatus: '',
@@ -97,7 +97,8 @@ const useRoomStore = create<RoomStore & RoomStoreActions>((set) => ({
     set((state) => ({ initInfo: { ...state.initInfo, hasGameStarted } })),
   setIsInWaitingRoom: (isInWaitingRoom) =>
     set((state) => ({ initInfo: { ...state.initInfo, isInWaitingRoom } })),
-    setUsers: (users) => set((state) => ({ roomInfo: { ...state.roomInfo, users } })),
+  setUsers: (users) =>
+    set((state) => ({ roomInfo: { ...state.roomInfo, users } })),
 }));
 
 export default useRoomStore;

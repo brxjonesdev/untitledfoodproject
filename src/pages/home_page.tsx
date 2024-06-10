@@ -55,8 +55,8 @@ export default function Homepage() {
     setUsers,
   } = useRoomStore();
 
-  useEffect(()=>{
-    socket.on("room-created", (data) => {
+  useEffect(() => {
+    socket.on('room-created', (data) => {
       console.log('Room created:', data);
       setRoomInfo({
         roomOwner: data.infoFromValues.roomOwner,
@@ -66,31 +66,36 @@ export default function Homepage() {
         users: data.infoFromValues.users,
       });
       setIsInWaitingRoom(true);
-    })
+    });
 
-    socket.on("room-exists", (data) => {
-      setCreateStatus(`Room with code ${data} already exists. Please try again with a different code`)
+    socket.on('room-exists', (data) => {
+      setCreateStatus(
+        `Room with code ${data} already exists. Please try again with a different code`
+      );
       setIsSendingToServer(false);
-    })
+    });
 
-    socket.on("room-not-found", (data) => {
-      setJoinStatus(`Room with code ${data} not found. Please try again with a different code`)
+    socket.on('room-not-found', (data) => {
+      setJoinStatus(
+        `Room with code ${data} not found. Please try again with a different code`
+      );
       setIsSendingToServer(false);
-    })
+    });
 
-    socket.on("room-locked", (data) => {
-      setJoinStatus(`Room with code ${data} is locked. Please try again with a different code`)
+    socket.on('room-locked', (data) => {
+      setJoinStatus(
+        `Room with code ${data} is locked. Please try again with a different code`
+      );
       setIsSendingToServer(false);
-    })
+    });
 
     return () => {
-      socket.off("room-created");
-      socket.off("room-exists");
-      socket.off("room-joined");
-      socket.off("room-not-found");
-      socket.off("room-locked");
-    }
-
+      socket.off('room-created');
+      socket.off('room-exists');
+      socket.off('room-joined');
+      socket.off('room-not-found');
+      socket.off('room-locked');
+    };
   }, [
     setCreateStatus,
     setIsInWaitingRoom,
@@ -98,8 +103,8 @@ export default function Homepage() {
     setRoomInfo,
     setUsers,
     roomInfo,
-    setIsSendingToServer
-  ])
+    setIsSendingToServer,
+  ]);
   const createRoomForm = () => {
     return (
       <div className="mx-4">
@@ -108,8 +113,7 @@ export default function Homepage() {
             userName: 'Irene',
             roomName: "ReVeluv's Room",
             roomCode: '20140801',
-            foodOption: 'Breakfast',
-          }}
+         }}
           validationSchema={Yup.object({
             userName: Yup.string().required('Please enter a username'),
             roomName: Yup.string()
@@ -122,7 +126,7 @@ export default function Homepage() {
                 message:
                   'Room code must be exactly 8 digits long, no letters allowed',
               }),
-            foodOption: Yup.string().required('Please select a food option'),
+  
           })}
           onSubmit={(values) => createRoom(values)}
         >
@@ -188,30 +192,7 @@ export default function Homepage() {
                   className="text-citrus_blush-400 text-sm"
                 />
               </div>
-              <div className="flex flex-col space-y-2">
-                <label
-                  htmlFor="foodOption"
-                  className="font-semibold text-sm text-black-700 underline underline-offset-4"
-                >
-                  Food Option
-                </label>
-                <Field
-                  as="select"
-                  id="foodOption"
-                  name="foodOption"
-                  className="p-2 border rounded-md bg-white-950 py-2 text-sm"
-                >
-                  <option value="Breakfast">Breakfast</option>
-                  <option value="Lunch">Lunch</option>
-                  <option value="Dinner">Dinner</option>
-                  <option value="Sweet Treat Mode">Sweet Treat Mode</option>
-                </Field>
-                <ErrorMessage
-                  name="foodOption"
-                  component="div"
-                  className="text-strawberry_milkshake-400 text-sm"
-                />
-              </div>
+              
               <button
                 className="w-full bg-black-300 hover:bg-black-400 shadow-md py-2 rounded-md text-white-950 text-md font-semibold"
                 type="submit"
@@ -230,23 +211,22 @@ export default function Homepage() {
     userName: string;
     roomName: string;
     roomCode: string;
-    foodOption: string;
+
   }) => {
     setIsSendingToServer(true);
     setCreateStatus('Creating room...');
-    const { userName, roomName, roomCode, foodOption } = values;
+    const { userName, roomName, roomCode} = values;
 
     const infoFromValues = {
       roomOwner: userName,
       roomName,
       roomCode,
-      restaurantOption: foodOption,
       users: [
         {
           userName: userName,
           socketId: socket.id,
           isOwner: true,
-        }
+        },
       ],
     };
 
@@ -256,10 +236,7 @@ export default function Homepage() {
     if (socket.connected) {
       socket.emit('create-room', { infoFromValues });
     } else {
-      setCreateStatus(
-        'Server is down. Please try again later'
-      );
-
+      setCreateStatus('Server is down. Please try again later');
     }
     setIsSendingToServer(false);
   };
@@ -275,7 +252,6 @@ export default function Homepage() {
         code: roomCode,
       });
       setIsInWaitingRoom(true);
-    
     }
   };
 
@@ -319,27 +295,27 @@ export default function Homepage() {
                           Create a new room for your friends to join!
                         </DialogDescription>
                         {initInfo.createStatus && (
-                        <div className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 p-2 rounded-md mx-auto">
-                          <p className="text-sm text-black-300 font-semibold text-center">
-                            {initInfo.createStatus}
-                          </p>
-                        </div>
-                      )}
+                          <div className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 p-2 rounded-md mx-auto">
+                            <p className="text-sm text-black-300 font-semibold text-center">
+                              {initInfo.createStatus}
+                            </p>
+                          </div>
+                        )}
                         {createRoomForm()}
                       </DialogHeader>
                     </DialogContent>
                   </Dialog>
                 ) : (
-                  <Drawer
-                    open={initInfo.isCreateModalOpen}
-                  >
-                    <DrawerTrigger asChild onClick={()=> {
-                      toggleCreateModal()
-                    }}>
+                  <Drawer open={initInfo.isCreateModalOpen}>
+                    <DrawerTrigger
+                      asChild
+                      onClick={() => {
+                        toggleCreateModal();
+                      }}
+                    >
                       <Button
                         variant="outline"
                         className={`bg-black-400 border-0 text-white-950 font-semibold text-md`}
-                        
                       >
                         Create a Room
                       </Button>
@@ -360,9 +336,12 @@ export default function Homepage() {
                       )}
                       {createRoomForm()}
                       <DrawerFooter className="pt-2">
-                        <DrawerClose asChild onClick={()=>{
-                          toggleCreateModal()
-                        }}>
+                        <DrawerClose
+                          asChild
+                          onClick={() => {
+                            toggleCreateModal();
+                          }}
+                        >
                           <Button
                             variant="outline"
                             className="bg-gradient-to-t from-citrus_blush-800 to-bright_plum-800 text-black-500 font-semibold py-3"
