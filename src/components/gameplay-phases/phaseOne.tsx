@@ -1,12 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useGameplayStore from '@/stores/useGameplayStore';
 import useRoomStore from '@/stores/useInitRoomStore';
-import { Socket } from 'socket.io-client';
 
 export default function PhaseOne({ socket }: { socket: any }) {
-  const { isFauxLoading, setIsFauxLoading, setPhase } = useGameplayStore();
-  const { roomInfo, setUsers, initInfo } = useRoomStore();
+  const {setPhase } = useGameplayStore();
+  const { roomInfo, initInfo } = useRoomStore();
   const isHost = roomInfo.roomOwner === initInfo.enteredUserName;
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useRoomStore from '@/stores/useInitRoomStore';
@@ -26,7 +27,7 @@ export default function Gameplay({ socket }: { socket: any }) {
   const { phase, setPhase } = useGameplayStore();
 
   useEffect(() => {
-    socket.on('game-started', (data) => {
+    socket.on('game-started', (data: { order?: number | undefined; userName: string; isOwner: boolean; socketId: string | undefined; }[]) => {
       console.log('game-started', data);
       setUsers(data);
       setHasGameStarted(true);

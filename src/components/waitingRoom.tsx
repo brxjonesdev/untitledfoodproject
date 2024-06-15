@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from 'framer-motion';
 import {
   Card,
@@ -18,15 +19,14 @@ import lock from '@/assets/lock.svg';
 import useRoomStore from '@/stores/useInitRoomStore';
 import useGameplayStore from '@/stores/useGameplayStore';
 import { useEffect } from 'react';
-import { Button } from './ui/button';
 
-const WaitingRoom = ({ socket }) => {
+const WaitingRoom = ({ socket } : {socket:any}) => {
   const { roomInfo, initInfo, setUsers, setRoomInfo } = useRoomStore();
-  const { isRoomLocked, setIsRoomLocked, hasGameStarted } = useGameplayStore();
+  const { isRoomLocked, setIsRoomLocked} = useGameplayStore();
   const isHost = roomInfo.roomOwner === initInfo.enteredUserName;
 
   useEffect(() => {
-    socket.on('user-joined', (data) => {
+    socket.on('user-joined', (data :any) => {
       console.log('room-joined', data);
       setRoomInfo({
         roomOwner: data.roomDetails.roomOwner,
@@ -36,7 +36,7 @@ const WaitingRoom = ({ socket }) => {
         users: data.usersInRoom.users,
       });
     });
-    socket.on('user-left', (data) => {
+    socket.on('user-left', (data: any) => {
       console.log('room-left', data);
       setUsers(data.usersInRoom.users);
     });

@@ -1,14 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import useGameplayStore from '@/stores/useGameplayStore';
-import useRoomStore from '@/stores/useInitRoomStore';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function PhaseThree({ socket }: { socket: any }) {
     const { setPhase, choices } = useGameplayStore();
-    const { roomInfo } = useRoomStore();
     const [finalChoice, setFinalChoice] = useState('' as string);
     console.log(choices, "in phase three");
-    function getRandomChoice(choices) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function getRandomChoice(choices : any) {
         setTimeout(()=>{
             const randomChoice = choices[Math.floor(Math.random() * choices.length)];
             console.log(randomChoice, "random choice");

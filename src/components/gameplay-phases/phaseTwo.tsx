@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import useGameplayStore from '@/stores/useGameplayStore';
@@ -15,9 +17,9 @@ import {
 } from '@/components/ui/card';
 
 export default function PhaseTwo({ socket }: { socket: any }) {
-  const { isFauxLoading, setIsFauxLoading, setPhase, setIsVoting, isVoting, setChoices} =
+  const { setPhase, setIsVoting, isVoting, setChoices} =
     useGameplayStore();
-  const { roomInfo, setUsers, initInfo } = useRoomStore();
+  const { roomInfo, initInfo } = useRoomStore();
 
   useEffect(() => {
     socket.on('is-voting', () => {
@@ -30,7 +32,7 @@ export default function PhaseTwo({ socket }: { socket: any }) {
       setIsVoting(false);
     });
 
-    socket.on('votes-revealed', (data) => {
+    socket.on('votes-revealed', (data :any) => {
         console.log('votes-revealed', data);
         setChoices(data);
         setPhase('Phase_Three');
