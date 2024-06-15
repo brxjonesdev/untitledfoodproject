@@ -110,9 +110,9 @@ export default function Homepage() {
       <div className="mx-4">
         <Formik
           initialValues={{
-            userName: 'Irene',
-            roomName: "ReVeluv's Room",
-            roomCode: '20140801',
+            userName: '',
+            roomName: "",
+            roomCode: '',
          }}
           validationSchema={Yup.object({
             userName: Yup.string().required('Please enter a username'),
