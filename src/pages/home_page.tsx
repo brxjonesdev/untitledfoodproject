@@ -36,7 +36,7 @@ import Gameplay from '@/components/gameplay';
 import useRoomStore from '@/stores/useInitRoomStore';
 import { useEffect } from 'react';
 
-const socket = io('http://localhost:3001');
+const socket = io('https://ufp-server.onrender.com');
 
 export default function Homepage() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
