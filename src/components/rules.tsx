@@ -39,33 +39,6 @@ export default function GameRules() {
                 </p>
               </li>
               <li>
-                <h4 className="bg-citrus_blush-800 w-fit p-0.5 rounded-lg px-1">
-                  &#127828; Pick and Ban (LoL Style):
-                </h4>
-                <p className="text-sm">
-                  Take turns picking or banning food categories. Love sushi?
-                  Pick it! Hate veggies? Ban 'em!
-                </p>
-              </li>
-              <li>
-                <h4 className="bg-strawberry_milkshake-800 w-fit p-0.5 rounded-lg px-1">
-                  🏆 Top Three Categories:
-                </h4>
-                <p className="text-sm">
-                  The system tallies the votes and picks the top three food
-                  categories. Majority rules!
-                </p>
-              </li>
-              <li>
-                <h4 className="bg-citrus_blush-800 w-fit p-0.5 rounded-lg px-1">
-                  📍 Find Restaurants:
-                </h4>
-                <p className="text-sm">
-                  Get a list of nearby restaurants serving the chosen top three
-                  categories. Convenience is key!
-                </p>
-              </li>
-              <li>
                 <h4 className="bg-bright_plum-800 w-fit p-0.5 rounded-lg px-1">
                   🍽️ Choose Your Fave:
                 </h4>
