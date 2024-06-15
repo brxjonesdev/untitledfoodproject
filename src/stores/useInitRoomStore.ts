@@ -58,7 +58,7 @@ const useRoomStore = create<RoomStore & RoomStoreActions>((set) => ({
     isCreateModalOpen: false,
     isJoinModalOpen: false,
     enteredUserName: '',
-    enteredRoomCode: '20140801',
+    enteredRoomCode: '',
     isSendingToServer: false,
     joinStatus: '',
     createStatus: '',
