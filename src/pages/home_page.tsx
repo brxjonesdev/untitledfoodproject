@@ -236,7 +236,7 @@ export default function Homepage() {
     if (socket.connected) {
       socket.emit('create-room', { infoFromValues });
     } else {
-      setCreateStatus('Server is down. Please try again later');
+      setCreateStatus('Server is cycled down due to inactivity. Please try again later in a few minutes.');
     }
     setIsSendingToServer(false);
   };
